@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Начална страница</title>
+    <link rel="stylesheet" href="{% static 'styles/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/home.css' %}">
+</head>
+<body>
+    {% include 'navbar.html' %}
+
+    <main class="home-container">
+        <div class="home-content">
+            <h1>Добре дошли в защитената чат платформа!</h1>
+            <p>
+                Тази платформа е специално разработена за да покаже как чрез следването на безопасни практики за писане на код, 
+                стандартите в индустрията и OWASP препоръките може да бъде създадена сигурна и защитена онлайн платформа.
+            </p>
+        </div>
+    </main>
+</body>
+</html>

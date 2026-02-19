@@ -1,0 +1,36 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navbar</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/navbar.css' %}">
+</head>
+<body>
+    <div class="navbar">
+        <div class="navbar-left">
+            <ul>
+                <a href="{% url 'home' %}"><li>Начална страница</li></a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'user_list' %}"><li>Потребители</li></a>
+                <a href="{% url 'chat_list' %}"><li>Моите Чатове</li></a>
+                {% endif %}
+            </ul>
+        </div>
+        {% if user.is_authenticated %}
+        <div class="navbar-right">
+            <a href="{% url 'logout' %}" class="navbar-link">Изход</a>
+        </div>
+        {% else %}
+        <div class="navbar-right">
+            <ul>
+                <a href="{% url 'login' %}" class="navbar-link">Вход</a>
+                <a href="{% url 'register' %}" class="navbar-link">Регистриране</a>
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat List</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/chat_list.css' %}">
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <h1>МОИТЕ ЧАТОВЕ</h1>
+    <div class="chat_list">
+    <ul>
+        {% for chat in chat_data %}
+        <li class="chat_item">
+            <a href="{% url 'chat_detail' chat.chat.id %}">
+                <div class="chat_box">
+                    <div class="profile_picture">
+                        {% if chat.other_user != request.user %}
+                            {% if chat.other_user.profile_picture %}
+                                <img src="{{ chat.other_user.profile_picture.url }}" alt="Profile Picture">
+                            {% else %}
+                                <img src="{% static 'images/default_profile.png' %}" alt="Default image">
+                            {% endif %}
+                        {% else %}
+                            {% if chat.user1.profile_picture %}
+                                <img src="{{ chat.user1.profile_picture.url }}" alt="Profile Picture">
+                            {% else %}
+                                <img src="{% static 'images/default_profile.png' %}" alt="Default image">
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="chat_info">
+                        <h2>{{ chat.other_user.name }}</h2>
+                        {% if chat.last_message %}
+                            <p>{{ chat.last_message.sender.name }}: {{ chat.last_message.text }}</p>
+                        {% else %}
+                            <p>Няма съобщения.</p>
+                        {% endif %}
+                    </div>
+                    {% if chat.unread_count > 0 %}
+                        <div class="unread">
+                            <strong>{{ chat.unread_count }}</strong>
+                        </div>
+                    {% endif %}
+                </div>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    </div>
+</body>
+</html>

@@ -1,0 +1,144 @@
+h1 {
+    text-align: center;
+    margin: 25px;
+}
+
+ul, li {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+a {
+    color: black;
+    text-decoration: none;
+}
+
+.chat_list {
+    width: 80%;
+    margin: auto;
+    display: block;
+    height: 70vh;
+}
+
+.chat_item {
+    width: 100%;
+    border: 2px outset #eeeeee;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    overflow: hidden;
+}
+
+.chat_box {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    position: relative;
+}
+
+.profile_picture img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    margin-right: 20px;
+    margin-left: 10px;
+    overflow: hidden;
+}
+
+.chat_info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 70%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chat_info h2 {
+    margin: 0;
+    font-size: 25px;
+    color: black;
+}
+
+.chat_info p {
+    margin: 7px 0 0 0;
+    font-size: 20px;
+    color: #555;
+}
+
+.unread {
+    margin-left: auto;
+    margin-right: 15px;
+    text-align: center;
+    font-size: 25px;
+    background-color: black;
+    color: white;
+    border-radius: 50%;
+    padding: 5px 10px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.user_list {
+    width: 80%;
+    margin: 20px auto;
+}
+
+.user_item {
+    border: 2px outset #eeeeee;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    background-color: white;
+    transition: transform 0.2s;
+}
+
+.user_item:hover {
+    transform: translateY(-2px);
+}
+
+.user_box {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    position: relative;
+}
+
+.user_info {
+    flex-grow: 1;
+    margin-left: 20px;
+}
+
+.user_info h2 {
+    margin: 0;
+    font-size: 1.5em;
+    color: black;
+}
+
+.user_info p {
+    margin: 5px 0 0 0;
+    color: #666;
+}
+
+.send-btn {
+    background-color: black;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: auto;
+}
+
+.send-btn:hover {
+    background-color: black;
+}
+
+.no-users {
+    text-align: center;
+    color: #666;
+    margin-top: 20px;
+}

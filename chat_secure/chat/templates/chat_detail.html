@@ -1,0 +1,323 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Detail - {{ other_user.name }}</title>
+    <link rel="stylesheet" href="{% static 'styles/chat.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/search.css' %}">
+</head>
+<body>
+    <div class="bar">
+        <h2><a href="{% url 'chat_list' %}">&#11013;</a></h2>
+        <h2>{{ other_user.name }}</h2>
+        
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Search...">
+            <button id="searchButton">Search</button>
+        </div>
+    </div>
+    
+    <div class="chat">
+        <div class="file-list">
+            <h2>ФАЙЛОВЕ</h2>
+            <hr>
+            <ul id="fileList">
+                {% for file in files %}
+                <div class="files_div">
+                    <li><a href="{% url 'download_file' file.id %}" download="{{ file.original_filename }}" target="_blank">{{ file.original_filename }}</a></li>
+                </div>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <div class="chat-box">
+            <div class="messages" id="messagesContainer">
+                {% for message in messages %}
+                    <div class="message {% if message.sender.id == request.user.id %}my-message{% else %}other-message{% endif %}">
+                        <div class="message-content">
+                            {{ message.text }}
+                            <div class="message-time">{{ message.created|date:"H:i" }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="messager">
+                <input type="file" id="fileInput" style="display: none;" accept=".jpg,.jpeg,.png,.gif,.pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip">
+                <button id="uploadButton" class="upload-btn">
+                    <span class="plus-icon">+</span>
+                </button>
+                <form id="messageForm" style="width: 100%;">
+                    <input type="text" id="messageInput" placeholder="Type a message">
+                    <button type="submit" class="send">ИЗПРАТИ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="search-results-overlay" id="searchResultsOverlay">
+        <div class="search-results-modal">
+            <div class="search-results-header">
+                <h2>Results (<span id="resultCount">0</span>)</h2>
+                <button class="close-modal" onclick="closeSearchResults()">Close</button>
+            </div>
+            <div class="search-results-body" id="searchResultsContent"></div>
+        </div>
+    </div>
+    
+    <script>
+        const maxFileSize = 10 * 1024 * 1024;
+        
+        const allowedExtensions = [
+            'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp',
+            'pdf', 'txt', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+            'zip', 'rar'
+        ];
+        
+        const chatId = "{{ chat.id }}";
+        const userId = "{{ request.user.id }}";
+        const sendToId = "{{ other_user.id }}";
+        const messagesContainer = document.querySelector('#messagesContainer');
+        
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            scrollToBottom();
+        });
+        
+        const chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/chat/' + chatId + '/'
+        );
+        
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            
+            if (data.type === 'error') {
+                alert('Грешка: ' + data.error);
+                return;
+            }
+            
+            if (data.type === 'message') {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const timeStr = `${hours}:${minutes}`;
+                
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${data.sent_by == userId ? 'my-message' : 'other-message'}`;
+                
+                messageElement.innerHTML = `
+                    <div class="message-content">
+                        ${escapeHtml(data.message)}
+                        <div class="message-time">${timeStr}</div>
+                    </div>
+                `;
+                
+                messagesContainer.appendChild(messageElement);
+                scrollToBottom();
+                
+                if (data.file && data.file.file_id) {
+                    const fileList = document.querySelector('#fileList');
+                    const fileDiv = document.createElement('div');
+                    fileDiv.className = 'files_div';
+                    
+                    const fileLink = document.createElement('a');
+                    fileLink.href = `/files/${data.file.file_id}/`;
+                    fileLink.download = escapeHtml(data.file.file_name);
+                    fileLink.target = '_blank';
+                    fileLink.textContent = escapeHtml(data.file.file_name);
+                    
+                    const listItem = document.createElement('li');
+                    listItem.appendChild(fileLink);
+                    fileDiv.appendChild(listItem);
+                    
+                    fileList.insertBefore(fileDiv, fileList.firstChild);
+                }
+            }
+        };
+        
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed');
+        };
+        
+        document.querySelector('#messageForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const messageInput = document.querySelector('#messageInput');
+            const message = messageInput.value.trim();
+            
+            if (message !== '') {
+                chatSocket.send(JSON.stringify({
+                    message: message,
+                    sent_by: userId,
+                    send_to: sendToId,
+                    thread_id: chatId
+                }));
+                messageInput.value = '';
+            }
+        });
+        
+        document.querySelector('#uploadButton').addEventListener('click', function() {
+            document.querySelector('#fileInput').click();
+        });
+        
+        document.querySelector('#fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (file.size > maxFileSize) {
+                alert('Файлът е твърде голям! Максимален размер: 10MB\nВашият файл: ' + (file.size / (1024 * 1024)).toFixed(2) + 'MB');
+                event.target.value = '';
+                return;
+            }
+            
+            const fileName = file.name.toLowerCase();
+            const fileExt = fileName.split('.').pop();
+            
+            if (!allowedExtensions.includes(fileExt)) {
+                alert('Файловият тип ".' + fileExt + '" не е позволен!\n\nРазрешени типове:\n' + allowedExtensions.join(', '));
+                event.target.value = '';
+                return;
+            }
+            
+            if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+                alert('Невалидно име на файл!');
+                event.target.value = '';
+                return;
+            }
+            
+            const uploadBtn = document.querySelector('#uploadButton');
+            const originalBtnHTML = uploadBtn.innerHTML;
+            uploadBtn.innerHTML = '<span class="plus-icon">⏳</span>';
+            uploadBtn.disabled = true;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                chatSocket.send(JSON.stringify({
+                    file_data: e.target.result,
+                    file_name: file.name,
+                    sent_by: userId,
+                    send_to: sendToId,
+                    thread_id: chatId
+                }));
+                
+                event.target.value = '';
+                uploadBtn.innerHTML = originalBtnHTML;
+                uploadBtn.disabled = false;
+            };
+            
+            reader.onerror = function() {
+                alert('Грешка при четене на файла!');
+                event.target.value = '';
+                uploadBtn.innerHTML = originalBtnHTML;
+                uploadBtn.disabled = false;
+            };
+            
+            reader.readAsDataURL(file);
+        });
+        
+        document.getElementById('searchButton').addEventListener('click', performSearch);
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') performSearch();
+        });
+        
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value;
+            if (!searchTerm.trim()) {
+                alert('Enter search term');
+                return;
+            }
+            
+            const searchButton = document.getElementById('searchButton');
+            searchButton.textContent = 'Searching...';
+            searchButton.disabled = true;
+            
+            fetch('/search/?q=' + encodeURIComponent(searchTerm) + '&chat_id=' + chatId)
+                .then(response => response.json())
+                .then(data => {
+                    searchButton.textContent = 'Search';
+                    searchButton.disabled = false;
+                    
+                    if (data.success) {
+                        displayResults(data);
+                    } else {
+                        displayError(data);
+                    }
+                })
+                .catch(error => {
+                    searchButton.textContent = 'Search';
+                    searchButton.disabled = false;
+                    alert('Search failed: ' + error.message);
+                });
+        }
+        
+        function displayResults(data) {
+            const content = document.getElementById('searchResultsContent');
+            const count = document.getElementById('resultCount');
+            const overlay = document.getElementById('searchResultsOverlay');
+            
+            count.textContent = data.count;
+            
+            let html = '';
+            
+            if (data.messages && data.messages.length > 0) {
+                data.messages.forEach(msg => {
+                    let timeOnly = '';
+                    if (msg.created) {
+                        const date = new Date(msg.created);
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        timeOnly = `${hours}:${minutes}`;
+                    }
+                    
+                    html += `
+                        <div class="search-result-item">
+                            <div><strong>Text:</strong> ${escapeHtml(msg.text)}</div>
+                            <div><strong>Sender:</strong> ${escapeHtml(msg.sender_name)}</div>
+                            <div><strong>Time:</strong> ${timeOnly}</div>
+                        </div>
+                    `;
+                });
+            } else {
+                html = '<div class="no-results">No results found</div>';
+            }
+            
+            content.innerHTML = html;
+            overlay.style.display = 'flex';
+        }
+        
+        function displayError(data) {
+            const content = document.getElementById('searchResultsContent');
+            const count = document.getElementById('resultCount');
+            const overlay = document.getElementById('searchResultsOverlay');
+            
+            count.textContent = '0';
+            content.innerHTML = `
+                <div style="color: red; padding: 10px;">
+                    <strong>Error:</strong> ${escapeHtml(data.error)}
+                </div>
+            `;
+            overlay.style.display = 'flex';
+        }
+        
+        function closeSearchResults() {
+            document.getElementById('searchResultsOverlay').style.display = 'none';
+        }
+        
+        document.getElementById('searchResultsOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeSearchResults();
+        });
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>    
+</body>
+</html>

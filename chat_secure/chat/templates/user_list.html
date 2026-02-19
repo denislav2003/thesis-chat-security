@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User List</title>
+    <link rel="stylesheet" href="{% static 'styles/chat_list.css' %}">
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <h1>Всички Потребители</h1>
+    <div class="user_list">
+        {% if users %}
+            <ul>
+                {% for user in users %}
+                    <li class="user_item">
+                        <a href="{% url 'create_chat' request.user.id user.id %}" class="user_box">
+                            <div class="profile_picture">
+                                {% if user.profile_picture %}
+                                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture">
+                                {% else %}
+                                    <img src="{% static 'images/default_profile.png' %}" alt="Default image">
+                                {% endif %}
+                            </div>
+                            <div class="user_info">
+                                <h2>{{ user.name }}</h2>
+                            </div>
+                            <button class="send-btn">Изпрати съобщение</button>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-users">Няма други потребители.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

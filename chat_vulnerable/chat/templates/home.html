@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Начална страница</title>
+    <link rel="stylesheet" href="{% static 'styles/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/home.css' %}">
+</head>
+<body>
+    {% include 'navbar.html' %}
+
+    <main class="home-container">
+        <div class="home-content">
+            <h1>Добре дошли в демонстрационната уязвима чат платформа!</h1>
+            <p>
+                Тази платформа е специално разработена с цел демонстрация на широко разпространени уязвимости, засягащи уеб чат платформите. 
+                Целта е създаването на безопасна среда, в която начинаещите студенти по киберсигурност могат да упражнят уменията си като изпробват 
+                едни от най-често срещаните уязвимости.
+            </p>
+        </div>
+    </main>
+</body>
+</html>
